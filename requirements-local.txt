@@ -1,0 +1,2 @@
+# Installed by install.sh in the dedicated af21 Conda environment.
+google-colab-cli

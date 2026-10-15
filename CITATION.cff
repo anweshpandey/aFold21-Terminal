@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use aFold21, cite this wrapper and the ColabFold and AlphaFold papers as appropriate."
+title: "aFold21: a terminal wrapper for ColabFold on Google Colab"
+authors:
+  - family-names: Pandey
+    given-names: Anwesh
+version: 0.1.0
+date-released: 2026-10-15
+license: MIT
+repository-code: "https://github.com/anweshpandey/aFold21"
+references:
+  - type: article
+    authors:
+      - family-names: Mirdita
+        given-names: Martin
+      - family-names: Schütze
+        given-names: Kai
+      - family-names: Moriwaki
+        given-names: Yoshitaka
+      - family-names: Heo
+        given-names: Lim
+      - family-names: Ovchinnikov
+        given-names: Sergey
+      - family-names: Steinegger
+        given-names: Martin
+    title: "ColabFold: making protein folding accessible to all"
+    journal: "Nature Methods"
+    year: 2022
+    volume: 19
+    start: 679
+    end: 682
+    doi: "10.1038/s41592-022-01488-1"
+  - type: article
+    authors:
+      - family-names: Jumper
+        given-names: John
+    title: "Highly accurate protein structure prediction with AlphaFold"
+    journal: "Nature"
+    year: 2021
+    volume: 596
+    start: 583
+    end: 589
+    doi: "10.1038/s41586-021-03819-2"
