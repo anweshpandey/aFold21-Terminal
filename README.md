@@ -1,4 +1,4 @@
-# aFold21
+# aFold21-Terminal
 
 **A terminal-oriented workflow for running ColabFold-based protein structure predictions through Google Colab.**
 
