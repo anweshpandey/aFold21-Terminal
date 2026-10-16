@@ -159,6 +159,14 @@ af21-all sequences.csv --output-root ./batch_results --continue-on-error
 
 Each identifier receives a separate output directory. Non-empty output directories are skipped to reduce the risk of overwriting existing results. Review the batch runner's `--help` output for the options supported by your installed version. The remote session is not necessarily stopped automatically after the batch; stop it when you are finished and have confirmed downloads completed.
 
+## Colab session manager and free-tier quota notes
+
+The installer also installs an optional Conda activation hook for interactive terminals. When you run `conda activate af21`, it checks the configured Colab session and prints the session status and the usage fields exposed by the Colab CLI. If the session is missing or unavailable, it offers a menu for checking status, signing in/switching accounts, creating a session with the current account, checking usage, or returning without connecting.
+
+The hook does **not** automatically create a GPU runtime during activation. It is skipped in non-interactive shells and batch jobs, so it does not consume standard input or interrupt unattended runs. You can configure the session, auth mode, and requested GPU using `AF21_SESSION` (default `alphafold21`), `AF21_AUTH` (default `oauth2`), and `AF21_GPU` (default `T4`).
+
+**Free-tier quota limitation:** the CLI exposes usage information such as compute-unit balance, usage rate, and active assignments, but not a fixed free-tier quota total. Google free-tier limits are dynamic. As a result, aFold21 cannot reliably calculate percentage remaining or produce a meaningful 90%-used warning for free-tier access. A displayed `0.00` compute-unit balance is not a free-tier quota percentage. See [`docs/COLAB_SESSION_MANAGER.md`](docs/COLAB_SESSION_MANAGER.md) for details.
+
 ## Repository map
 
 - `af21.py` — interactive single-prediction and session-management wrapper.

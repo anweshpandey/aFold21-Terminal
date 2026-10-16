@@ -28,6 +28,12 @@ conda run -n "$ENV_NAME" python -m pip install --upgrade google-colab-cli
 mkdir -p "$APP_DIR" "$BIN_DIR"
 install -m 0644 "$SCRIPT_DIR/af21.py" "$APP_DIR/af21.py"
 install -m 0644 "$SCRIPT_DIR/af21_batch.py" "$APP_DIR/af21_batch.py"
+install -m 0644 "$SCRIPT_DIR/af21_colab_session_manager.sh" "$APP_DIR/af21_colab_session_manager.sh"
+
+# Install a Conda activation hook. It only reports/checks on interactive TTYs.
+ACTIVATE_DIR="$ENV_PREFIX/etc/conda/activate.d"
+mkdir -p "$ACTIVATE_DIR"
+install -m 0644 "$SCRIPT_DIR/af21-conda-activate.sh" "$ACTIVATE_DIR/af21-colab-menu.sh"
 
 cat > "$BIN_DIR/af21" <<LAUNCHER
 #!/usr/bin/env bash
@@ -64,5 +70,8 @@ echo "  Single prediction: af21"
 echo "  Batch predictions: af21-all sequences.csv --output-root ./batch_results"
 echo "  Runtime status:    af21 status  (or af21-status)"
 echo "  Shutdown runtime:  af21 stop    (or af21-stop)"
+echo "  Colab manager:     enabled on interactive 'conda activate $ENV_NAME'"
+echo "  Details:           $APP_DIR/af21_colab_session_manager.sh"
 echo
 echo "First use: run 'af21' and follow the Google Colab CLI sign-in instructions."
+echo "Quota note: free-tier quota percentage/90% threshold is not available from the CLI."
