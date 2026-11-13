@@ -55,11 +55,10 @@ af21_colab_switch_account() {
   fi
 
   echo "[af21] Starting the supported OAuth flow via 'colab status'."
-  echo "[af21] Open the displayed Google URL, choose the intended account, approve, then paste the authorization code."
-  # CLI 0.7.4 has no `colab login` command. With the token temporarily absent,
-  # any authenticated command starts colab_cli.auth._run_remote_flow().
-  output="$(colab --auth="$AF21_AUTH" status -s "$AF21_SESSION" 2>&1)"; rc=$?
-  printf '%s\n' "$output"
+  echo "[af21] Google URL and code prompt will appear below. Complete this flow in this terminal."
+  # Do not capture output: OAuth needs an interactive terminal for its URL/code.
+  colab --auth="$AF21_AUTH" status -s "$AF21_SESSION"
+  rc=$?
   if [[ -s "$AF21_COLAB_TOKEN" ]]; then
     [[ -z "$saved" ]] || rm -f "$saved"
     echo "[af21] OAuth token created."
