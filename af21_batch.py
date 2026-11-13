@@ -9,6 +9,7 @@ ID_01,QTKLARLHYKYKRRHSIWRKRKEKYDNKNDYGRKIGKKWQVWK
 from __future__ import annotations
 
 import argparse
+import os
 import csv
 import re
 import shutil
@@ -114,7 +115,42 @@ def main():
     print(f"Predictions queued: {len(rows)}")
     print(f"Output root: {output_root}")
     print("Runs are sequential; repeated sequences with different IDs are predicted separately.")
-    print("The existing Colab runtime will be reused by the af21 launcher.\n")
+    print("Checking Colab authentication and runtime before starting the batch...\\n", flush=True)
+
+    # Keep the real terminal attached so OAuth can show its URL and read the code.
+    auth = os.environ.get("AF21_AUTH", "oauth2")
+    session = os.environ.get("AF21_SESSION", "alphafold21")
+    gpu = os.environ.get("AF21_GPU", "T4").upper()
+    colab = shutil.which("colab")
+    if not colab:
+        print("ERROR: 'colab' CLI was not found on PATH.", file=sys.stderr)
+        return 2
+    status_args = [colab, f"--auth={auth}", "status", "-s", session]
+    try:
+        first_status = subprocess.run(status_args, check=False)
+        checked = subprocess.run(status_args, text=True, capture_output=True, check=False)
+        status_text = (checked.stdout or "") + "\\n" + (checked.stderr or "")
+        if "not found" in status_text.lower() or checked.returncode != 0:
+            print(f"\\nColab session '{session}' is not active. Creating it now (GPU: {gpu})...", flush=True)
+            created = subprocess.run([colab, f"--auth={auth}", "new", "-s", session, "--gpu", gpu], check=False)
+            if created.returncode != 0:
+                print("ERROR: Colab session creation/authentication failed. No predictions were started.", file=sys.stderr)
+                return created.returncode or 1
+            verified = subprocess.run(status_args, text=True, capture_output=True, check=False)
+            verified_text = (verified.stdout or "") + "\\n" + (verified.stderr or "")
+            if verified.returncode != 0 or "not found" in verified_text.lower():
+                print("ERROR: Colab session could not be verified. No predictions were started.", file=sys.stderr)
+                return 1
+        elif first_status.returncode != 0:
+            print("ERROR: Colab authentication/session check failed. No predictions were started.", file=sys.stderr)
+            return first_status.returncode or 1
+    except KeyboardInterrupt:
+        print("\\nInterrupted during Colab preflight; no predictions were started.")
+        return 130
+    except Exception as exc:
+        print(f"ERROR during Colab preflight: {exc}", file=sys.stderr)
+        return 1
+    print(f"Colab session '{session}' is ready. All entries will reuse it.\\n", flush=True)
 
     failures = []
     for index, (identifier, sequence, folder) in enumerate(rows, start=1):
