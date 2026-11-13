@@ -129,7 +129,7 @@ def main():
     try:
         first_status = subprocess.run(status_args, check=False)
         checked = subprocess.run(status_args, text=True, capture_output=True, check=False)
-        status_text = (checked.stdout or "") + "\\n" + (checked.stderr or "")
+        status_text = (checked.stdout or "") + "\n" + (checked.stderr or "")
         if "not found" in status_text.lower() or checked.returncode != 0:
             print(f"\\nColab session '{session}' is not active. Creating it now (GPU: {gpu})...", flush=True)
             created = subprocess.run([colab, f"--auth={auth}", "new", "-s", session, "--gpu", gpu], check=False)
@@ -137,7 +137,7 @@ def main():
                 print("ERROR: Colab session creation/authentication failed. No predictions were started.", file=sys.stderr)
                 return created.returncode or 1
             verified = subprocess.run(status_args, text=True, capture_output=True, check=False)
-            verified_text = (verified.stdout or "") + "\\n" + (verified.stderr or "")
+            verified_text = (verified.stdout or "") + "\n" + (verified.stderr or "")
             if verified.returncode != 0 or "not found" in verified_text.lower():
                 print("ERROR: Colab session could not be verified. No predictions were started.", file=sys.stderr)
                 return 1
