@@ -1,0 +1,24 @@
+name: Validate aFold21
+
+on:
+  push:
+    branches: ["main", "maintenance/**"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile Python modules
+        run: python -m compileall -q af21.py af21_batch.py
+      - name: Check shell syntax
+        run: |
+          bash -n install.sh
+          bash -n af21_colab_session_manager.sh
+          bash -n af21-conda-activate.sh
