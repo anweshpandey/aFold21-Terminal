@@ -28,53 +28,70 @@ af21_colab_usage() {
 }
 
 af21_colab_create_session() {
-  local output rc
+  local rc
   echo
   echo "[af21] Creating/reconnecting session '$AF21_SESSION' with GPU $AF21_GPU..."
-  output="$(colab --auth="$AF21_AUTH" new -s "$AF21_SESSION" --gpu "$AF21_GPU" 2>&1)"; rc=$?
-  printf '%s\n' "$output"
-  if [[ $rc -eq 0 ]] && { [[ "$output" =~ [Rr][Ee][Aa][Dd][Yy] ]] || af21_colab_session_exists >/dev/null 2>&1; }; then
-    echo "[af21] Session '$AF21_SESSION' is ready."
-    af21_colab_usage
-    return 0
+  # Keep stdin/stdout attached: OAuth may need an interactive URL/code prompt.
+  colab --auth="$AF21_AUTH" new -s "$AF21_SESSION" --gpu "$AF21_GPU"
+  rc=$?
+  if [[ $rc -eq 0 ]]; then
+    local output verify_rc
+    output="$(colab --auth="$AF21_AUTH" status -s "$AF21_SESSION" 2>&1)"
+    verify_rc=$?
+    if [[ $verify_rc -eq 0 && ! "$output" =~ [Ss]ession[[:space:]]+.*not[[:space:]]+found ]]; then
+      echo "[af21] Session '$AF21_SESSION' is ready."
+      printf '%s\n' "$output"
+      af21_colab_usage
+      return 0
+    fi
   fi
-  echo "[af21] Could not create the session. Check account access, quota, and GPU availability."
+  echo "[af21] Could not verify the session. Check authentication, account access, quota, and GPU availability."
   return 1
 }
 
 af21_colab_switch_account() {
-  local backup="" saved="" output rc
-  mkdir -p "$(dirname "$AF21_COLAB_TOKEN")" || return 1
-  echo "[af21] Backing up the current token before starting a fresh OAuth flow."
-  if [[ -f "$AF21_COLAB_TOKEN" ]]; then
-    backup="${AF21_COLAB_TOKEN}.backup.$(date +%Y%m%d-%H%M%S)"
-    cp -p "$AF21_COLAB_TOKEN" "$backup" || { echo "[af21] Could not back up token."; return 1; }
-    saved="${AF21_COLAB_TOKEN}.switching.$$"
-    mv "$AF21_COLAB_TOKEN" "$saved" || return 1
-    echo "[af21] Previous token backup: $backup"
+  local rc
+  echo "[af21] Removing only the cached Google Colab CLI OAuth credential."
+  # google-colab-cli 0.7.x stores its OAuth token in the OS keyring.
+  # This intentionally does not touch credentials for other applications.
+  python - <<'PY'
+import keyring
+from keyring.errors import PasswordDeleteError
+service = "google-colab-cli"
+username = "oauth_token"
+try:
+    keyring.delete_password(service, username)
+    print("[af21] Cached Colab CLI keyring credential cleared.")
+except PasswordDeleteError:
+    print("[af21] No cached Colab CLI keyring credential was present.")
+except Exception as exc:
+    raise SystemExit(f"[af21] Could not clear Colab CLI keyring credential: {exc}")
+PY
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "[af21] Account switching stopped; keyring credential was not safely cleared."
+    return 1
   fi
 
-  echo "[af21] Starting the supported OAuth flow via 'colab status'."
-  echo "[af21] Google URL and code prompt will appear below. Complete this flow in this terminal."
-  # Do not capture output: OAuth needs an interactive terminal for its URL/code.
-  colab --auth="$AF21_AUTH" status -s "$AF21_SESSION"
+  # Preserve a legacy file token if one exists; current CLI versions may migrate it.
+  if [[ -f "$AF21_COLAB_TOKEN" ]]; then
+    local backup="${AF21_COLAB_TOKEN}.backup.$(date +%Y%m%d-%H%M%S)"
+    cp -p "$AF21_COLAB_TOKEN" "$backup" || return 1
+    mv "$AF21_COLAB_TOKEN" "${AF21_COLAB_TOKEN}.switching.$$" || return 1
+    echo "[af21] Legacy token backed up to: $backup"
+  fi
+
+  echo "[af21] Starting Google OAuth. Choose the intended account in the browser."
+  # 'sessions' is an authenticated CLI command; keep the terminal attached.
+  colab --auth="$AF21_AUTH" sessions
   rc=$?
-  if [[ -s "$AF21_COLAB_TOKEN" ]]; then
-    [[ -z "$saved" ]] || rm -f "$saved"
-    echo "[af21] OAuth token created."
+  if [[ $rc -eq 0 ]]; then
+    echo "[af21] Colab CLI authentication command completed."
     return 0
   fi
-
-  if [[ -n "$saved" && -f "$saved" && ! -e "$AF21_COLAB_TOKEN" ]]; then
-    mv "$saved" "$AF21_COLAB_TOKEN"
-    echo "[af21] Restored previous token because new authentication was not completed."
-  elif [[ -n "$saved" && -f "$saved" ]]; then
-    echo "[af21] Previous token remains at: $saved"
-  fi
-  echo "[af21] OAuth was not confirmed (CLI exit: $rc)."
+  echo "[af21] OAuth/account verification failed (CLI exit: $rc)."
   return 1
 }
-
 af21_colab_menu() {
   if [[ ! -t 0 || ! -t 1 ]]; then
     echo "[af21] Non-interactive terminal; skipping session menu."

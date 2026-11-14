@@ -22,8 +22,9 @@ else
 fi
 
 ENV_PREFIX="$(conda run -n "$ENV_NAME" python -c 'import sys; print(sys.prefix)')"
-echo "Installing/updating Google Colab CLI in '$ENV_NAME'..."
-conda run -n "$ENV_NAME" python -m pip install --upgrade google-colab-cli
+COLAB_CLI_VERSION="${AF21_COLAB_CLI_VERSION:-0.7.4}"
+echo "Installing Google Colab CLI ${COLAB_CLI_VERSION} in '$ENV_NAME'..."
+conda run -n "$ENV_NAME" python -m pip install "google-colab-cli==${COLAB_CLI_VERSION}"
 
 mkdir -p "$APP_DIR" "$BIN_DIR"
 install -m 0644 "$SCRIPT_DIR/af21.py" "$APP_DIR/af21.py"
