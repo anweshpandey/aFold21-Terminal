@@ -40,7 +40,7 @@ af21_colab_create_session() {
     verify_rc=$?
     if [[ $verify_rc -eq 0 && ! "$output" =~ [Ss]ession[[:space:]]+.*not[[:space:]]+found ]]; then
       echo "[af21] Session '$AF21_SESSION' is ready."
-      printf '%s\\n' "$output"
+      printf '%s\n' "$output"
       af21_colab_usage
       return 0
     fi
