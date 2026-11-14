@@ -115,7 +115,7 @@ def main():
     print(f"Predictions queued: {len(rows)}")
     print(f"Output root: {output_root}")
     print("Runs are sequential; repeated sequences with different IDs are predicted separately.")
-    print("Checking Colab authentication and runtime before starting the batch...\\n", flush=True)
+    print("Checking Colab authentication and runtime before starting the batch...\n", flush=True)
 
     # Trigger OAuth with the terminal attached, then check the named runtime.
     # Do not capture the authentication command: Google may ask for a browser code.
@@ -137,9 +137,9 @@ def main():
 
         status_args = [colab, f"--auth={auth}", "status", "-s", session]
         checked = subprocess.run(status_args, text=True, capture_output=True, check=False)
-        status_text = (checked.stdout or "") + "\\n" + (checked.stderr or "")
+        status_text = (checked.stdout or "") + "\n" + (checked.stderr or "")
         if "not found" in status_text.lower() or checked.returncode != 0:
-            print(f"\\nColab session '{session}' is not active. Creating it now (GPU: {gpu})...", flush=True)
+            print(f"\nColab session '{session}' is not active. Creating it now (GPU: {gpu})...", flush=True)
             created = subprocess.run(
                 [colab, f"--auth={auth}", "new", "-s", session, "--gpu", gpu],
                 check=False,
@@ -148,17 +148,17 @@ def main():
                 print("ERROR: Colab session creation failed. No predictions were started.", file=sys.stderr)
                 return created.returncode or 1
             verified = subprocess.run(status_args, text=True, capture_output=True, check=False)
-            verified_text = (verified.stdout or "") + "\\n" + (verified.stderr or "")
+            verified_text = (verified.stdout or "") + "\n" + (verified.stderr or "")
             if verified.returncode != 0 or "not found" in verified_text.lower():
                 print("ERROR: Colab session could not be verified. No predictions were started.", file=sys.stderr)
                 return 1
     except KeyboardInterrupt:
-        print("\\nInterrupted during Colab preflight; no predictions were started.")
+        print("\nInterrupted during Colab preflight; no predictions were started.")
         return 130
     except Exception as exc:
         print(f"ERROR during Colab preflight: {exc}", file=sys.stderr)
         return 1
-    print(f"Colab session '{session}' is ready. All entries will reuse it.\\n", flush=True)
+    print(f"Colab session '{session}' is ready. All entries will reuse it.\n", flush=True)
 
     failures = []
     for index, (identifier, sequence, folder) in enumerate(rows, start=1):
