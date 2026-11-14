@@ -44,6 +44,12 @@ def session_status():
 
 
 def ensure_session(gpu="T4"):
+    # Trigger the CLI's interactive OAuth flow before any captured status call.
+    # Capturing stdout/stderr here would hide the authorization URL/code prompt.
+    auth_check = run_cmd(["sessions"], check=False, capture=False)
+    if auth_check.returncode != 0:
+        raise RuntimeError("Colab CLI authentication failed. Complete OAuth and retry.")
+
     status = session_status()
     output = (status.stdout or "") + "\n" + (status.stderr or "")
     output_lower = output.lower()
