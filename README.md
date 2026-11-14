@@ -77,7 +77,13 @@ chmod +x install.sh
 ./install.sh
 ```
 
-The installer creates or reuses a Conda environment named `af21`, installs `google-colab-cli`, and installs launchers under `~/.local/bin/`.
+The installer creates or reuses a Conda environment named `af21`, installs Google Colab CLI **0.7.4 by default**, and installs launchers under `~/.local/bin/`. This version is pinned to avoid an unreviewed CLI upgrade changing authentication behavior. To deliberately test another CLI version, set `AF21_COLAB_CLI_VERSION` when running the installer, for example:
+
+```bash
+AF21_COLAB_CLI_VERSION=0.8.0 ./install.sh
+```
+
+For normal use, keep the default pinned version unless a newer release has been tested with aFold21.
 
 If you prefer a different environment name:
 
