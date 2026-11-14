@@ -28,12 +28,13 @@ af21_colab_usage() {
 }
 
 af21_colab_create_session() {
-  local output rc
+  local rc
   echo
   echo "[af21] Creating/reconnecting session '$AF21_SESSION' with GPU $AF21_GPU..."
-  output="$(colab --auth="$AF21_AUTH" new -s "$AF21_SESSION" --gpu "$AF21_GPU" 2>&1)"; rc=$?
-  printf '%s\n' "$output"
-  if [[ $rc -eq 0 ]] && { [[ "$output" =~ [Rr][Ee][Aa][Dd][Yy] ]] || af21_colab_session_exists >/dev/null 2>&1; }; then
+  # Keep stdin/stdout attached: the CLI may need an interactive OAuth flow.
+  colab --auth="$AF21_AUTH" new -s "$AF21_SESSION" --gpu "$AF21_GPU"
+  rc=$?
+  if [[ $rc -eq 0 ]] && af21_colab_session_exists >/dev/null 2>&1; then
     echo "[af21] Session '$AF21_SESSION' is ready."
     af21_colab_usage
     return 0
